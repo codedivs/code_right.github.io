@@ -95,6 +95,126 @@
     ],
     "correct_order": [0, 2]
   },
+   {
+    "question": "Define a Python function that returns the product of two numbers a and b",
+    "answer_divs": 2,
+    "answers": [
+      "def multiply(a, b):",
+      "def product(a, b):",
+      "return a * b",
+      "return a ** b",
+      "print(a * b)"
+    ],
+    "correct_order": [0, 2]
+  },
+  {
+    "question": "Write a Python function that checks if a number n is even",
+    "answer_divs": 2,
+    "answers": [
+      "def is_even(n):",
+      "def check_even(n):",
+      "return n % 2 == 0",
+      "return n / 2 == 0",
+      "print(n % 2 == 0)"
+    ],
+    "correct_order": [1, 2]
+  },
+  {
+    "question": "Create a Python function that returns the factorial of n",
+    "answer_divs": 2,
+    "answers": [
+      "def factorial(n):",
+      "def fact(n):",
+      "if n == 0: return 1",
+      "return n * factorial(n-1)",
+      "print(factorial(n))"
+    ],
+    "correct_order": [0, 3]
+  },
+  {
+    "question": "Define a Python function that returns the maximum of two numbers a and b",
+    "answer_divs": 2,
+    "answers": [
+      "def maximum(a, b):",
+      "def max_num(a, b):",
+      "return a if a > b else b",
+      "return max(a, b)",
+      "print(max(a, b))"
+    ],
+    "correct_order": [0, 3]
+  },
+  {
+    "question": "Write a Python function that returns the reverse of a list lst",
+    "answer_divs": 2,
+    "answers": [
+      "def reverse_list(lst):",
+      "def rev_list(lst):",
+      "return lst[::-1]",
+      "return reversed(lst)",
+      "print(lst[::-1])"
+    ],
+    "correct_order": [1, 2]
+  },
+   {
+    "question": "Create a function that returns the square root of a number n",
+    "answer_divs": 2,
+    "answers": [
+      "def sqrt_num(n):",
+      "def square_root(n):",
+      "return n ** 0.5",
+      "return n * 0.5",
+      "print(n ** 0.5)"
+    ],
+    "correct_order": [2, 0]
+  },
+  {
+    "question": "Write a Python function that counts the number of vowels in a string s",
+    "answer_divs": 2,
+    "answers": [
+      "def count_vowels(s):",
+      "def vowels(s):",
+      "return sum(1 for ch in s if ch.lower() in 'aeiou')",
+      "return len(s)",
+      "print(count_vowels(s))"
+    ],
+    "correct_order": [1, 2]
+  },
+  {
+    "question": "Define a function that checks if a number is positive",
+    "answer_divs": 2,
+    "answers": [
+      "def is_positive(n):",
+      "def positive(n):",
+      "return n > 0",
+      "return n >= 0",
+      "print(n > 0)"
+    ],
+    "correct_order": [3, 0]
+  },
+  {
+    "question": "Write a Python function that returns the largest element in a list",
+    "answer_divs": 2,
+    "answers": [
+      "def largest(lst):",
+      "def max_element(lst):",
+      "return max(lst)",
+      "return lst[-1]",
+      "print(max(lst))"
+    ],
+    "correct_order": [2, 1]
+  },
+  {
+    "question": "Define a function that joins a list of strings into one string separated by spaces",
+    "answer_divs": 2,
+    "answers": [
+      "def join_strings(lst):",
+      "def combine(lst):",
+      "return ' '.join(lst)",
+      "return lst.join(' ')",
+      "print(' '.join(lst))"
+    ],
+    "correct_order": [0, 2]
+  },
   {
     "question": "Create a function that returns the first element of a list",
     "answer_divs": 2,
