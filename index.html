@@ -1,58 +1,286 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Drag & Drop Quiz</title>
-  
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-  
-  <!-- External CSS -->
-  <link rel="stylesheet" href="index.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Free Drag & Drop Python Quiz – 20 Random Questions Every Game! Learn coding interactively. Worldwide access." />
+  <meta name="keywords" content="python quiz, drag and drop, coding game, learn python, interactive quiz" />
+  <meta name="author" content="Global Code Quiz" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="Python Drag & Drop Quiz – 20 New Questions Every Time!" />
+  <meta property="og:description" content="Master Python with random challenges. Play anywhere, anytime!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="en_US" />
+  <title>Python Drag & Drop Quiz – 20 Random Questions</title>
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Quiz",
+    "name": "Python Drag & Drop Quiz",
+    "about": {"@type": "Thing", "name": "Python Programming"},
+    "educationalLevel": "Beginner",
+    "inLanguage": "en",
+    "audience": {"@type": "Audience", "audienceType": "Worldwide"},
+    "publisher": {"@type": "Organization", "name": "Global Code Quiz"}
+  }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    /* [Same beautiful neon CSS as before – optimized for mobile & speed] */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{font-size:16px}body{margin:0;padding:15px 10px;min-height:100vh;font-family:'Fira Code',monospace;color:#d1d5db;
+      background:radial-gradient(circle at 20% 20%,#0b0f19 0%,#02060f 100%);background-attachment:fixed;overflow-x:hidden}
+    body::before{content:"";position:fixed;top:-100px;left:-100px;width:400px;height:400px;
+      background:radial-gradient(circle,rgba(0,255,200,0.15),transparent 60%);animation:drift 12s infinite alternate;z-index:0}
+    @keyframes drift{from{transform:translate(0,0)}to{transform:translate(60px,60px)}}
+    .container{max-width:800px;margin:0 auto;position:relative;z-index:1}
+    .section{margin:18px 0;padding:18px;border-radius:12px;background:rgba(18,25,38,0.75);backdrop-filter:blur(12px);
+      box-shadow:0 0 20px rgba(0,255,200,0.08);transition:all .3s}
+    .section:hover{box-shadow:0 0 25px rgba(0,255,200,0.18)}
+    button{padding:12px 22px;margin:6px;font-size:1rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;
+      transition:all .25s;box-shadow:0 0 12px rgba(20,255,236,0.4);position:relative;z-index:2}
+    button:hover{transform:translateY(-2px)}
+    #cancel_btn{background:linear-gradient(90deg,#ff416c,#ff4b2b);color:#fff}
+    #cancel_btn:hover{box-shadow:0 0 18px #ff4b2b}
+    #start_btn{background:linear-gradient(90deg,#14ffec,#0d7377);color:#0b0f19}
+    #start_btn:hover{box-shadow:0 0 18px #14ffec}
+    #quit_btn{background:linear-gradient(90deg,#3a3a3a,#1f1f1f);color:#ccc}
+    #quit_btn:hover{box-shadow:0 0 18px #aaa}
+    #retry_btn{background:linear-gradient(90deg,#2196f3,#00bcd4);color:#fff}
+    #retry_btn:hover{box-shadow:0 0 18px #00bcd4}
+    #question_pad{font-size:1.2rem;font-weight:600;color:#14ffec;margin-bottom:6px}
+    #timer{font-size:0.95rem;color:#8b9bb4}
+    #answer_pad,#question_answers{display:flex;flex-wrap:wrap;gap:12px;min-height:80px;padding:14px;
+      border:2px dashed rgba(20,255,236,0.4);border-radius:10px;background:rgba(12,18,28,0.7);transition:border .3s}
+    #answer_pad:hover,#question_answers:hover{border-color:#14ffec}
+    .answer-block{padding:14px 18px;background:rgba(20,255,236,0.12);color:#e0f7fa;border:1px solid rgba(20,255,236,0.5);
+      border-radius:8px;cursor:grab;user-select:none;transition:all .25s;font-family:'Fira Code',monospace}
+    .answer-block:hover{background:rgba(20,255,236,0.28);box-shadow:0 0 10px rgba(20,255,236,0.35)}
+    .answer-block.dragging{opacity:0.4;transform:scale(0.96);cursor:grabbing}
+    .slot{flex:1 1 120px;min-height:60px;background:rgba(20,255,236,0.06);border:2px dashed rgba(20,255,236,0.35);
+      border-radius:8px;display:flex;align-items:center;justify-content:center;color:#666;font-style:italic;font-size:0.9rem}
+    #result h2{color:#14ffec;margin-bottom:12px}
+    #result p{margin:8px 0;font-size:1.1rem}
+    .adsense-footer{margin:30px auto;text-align:center;max-width:728px;padding:15px;border-radius:10px;
+      background:rgba(255,255,255,0.05);backdrop-filter:blur(8px)}
+    .cursor-glow{position:fixed;width:40px;height:40px;border-radius:50%;background:radial-gradient(circle,rgba(20,255,236,0.28),transparent 70%);
+      pointer-events:none;transform:translate(-50%,-50%);transition:top .08s linear,left .08s linear;z-index:0}
+    @keyframes shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-6px)}20%,40%,60%,80%{transform:translateX(6px)}}
+    .shake{animation:shake .5s}
+    @media(max-width:600px){
+      body{padding:12px 8px}button{padding:11px 16px;font-size:0.95rem;margin:5px 3px}
+      #question_pad{font-size:1.1rem}.answer-block{padding:11px 13px;font-size:0.9rem}
+      .slot{min-height:56px;font-size:0.85rem}
+    }
+  </style>
 </head>
 <body>
-  <div style="text-align:center; margin:15px 0;">
-    <button id="cancel_btn">Cancel & Restart</button>
-  </div>
-  
-  <div id="questions_division">
-    <div id="question_pad">Welcome! Click Start to begin.</div>
-    <div id="timer" style="display:none;">Time: 0s</div>
-  </div>
-  
-  <div id="question_answers_division">
-    <div id="question_answers"></div>
-  </div>
-  
-  <div id="answers_division">
-    <div id="answer_pad">Answer Pad</div>
-  </div>
-  
-  <div id="start_screen">
-    <button id="start_btn">Start Quiz</button>
-    <button id="quit_btn">Quit</button>
-  </div>
-  
-  <div id="result" style="display:none;">
-    <h2>Quiz Complete!</h2>
-    <p id="score"></p>
-    <p id="total_time"></p>
-    <button id="retry_btn">Retry Quiz</button>
+  <div class="container">
+    <div style="text-align:center;margin:15px 0;">
+      <button id="cancel_btn" aria-label="Cancel and restart">Cancel & Restart</button>
+    </div>
+
+    <div id="questions_division" class="section">
+      <div id="question_pad" role="status" aria-live="polite">Loading 20 random questions...</div>
+      <div id="timer" style="display:none;">Time: 0s</div>
+    </div>
+
+    <div id="question_answers_division" class="section">
+      <div id="question_answers" role="region" aria-label="Drop zone"></div>
+    </div>
+
+    <div id="answers_division" class="section">
+      <div id="answer_pad" role="region" aria-label="Answer pad">Answer Pad</div>
+    </div>
+
+    <div id="start_screen" class="section" style="text-align:center;">
+      <button id="start_btn">Start Quiz (20 Random Qs)</button>
+      <button id="quit_btn">Quit</button>
+    </div>
+
+    <div id="result" class="section" style="display:none;text-align:center;">
+      <h2>Quiz Complete!</h2>
+      <p id="score"></p>
+      <p id="total_time"></p>
+      <button id="retry_btn">Play Again (New Set)</button>
+    </div>
+
+    <!-- AdSense -->
+    <div class="adsense-footer">
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+           crossorigin="anonymous"></script>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="XXXXXXXXXX"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+      <p style="font-size:0.7rem;color:#666;margin-top:8px;">Advertisement</p>
+    </div>
   </div>
 
-  <!-- External JS -->
-  <script src="trial.js"></script>
-
-  <!-- Neon cursor glow -->
   <div class="cursor-glow"></div>
 
   <script>
+    // DOM
+    const questionPad = document.getElementById('question_pad');
+    const answerPad = document.getElementById('answer_pad');
+    const questionAnswers = document.getElementById('question_answers');
+    const timerDisplay = document.getElementById('timer');
+    const resultDiv = document.getElementById('result');
+    const scoreDisplay = document.getElementById('score');
+    const totalTimeDisplay = document.getElementById('total_time');
+    const retryBtn = document.getElementById('retry_btn');
+    const cancelBtn = document.getElementById('cancel_btn');
+    const startScreen = document.getElementById('start_screen');
+    const startBtn = document.getElementById('start_btn');
+    const quitBtn = document.getElementById('quit_btn');
+
+    let allQuestions = [], selectedQuestions = [], curIdx = 0, curQ = null;
+    let correctCount = 0, startTime = 0, questionStartTime = 0, intervalId = null, isQuizActive = false;
+
+    // Fetch + Select 20 Random Easy Questions (1–100)
+    fetch('questions.json')
+      .then(r => r.ok ? r.json() : Promise.reject('Failed to load questions'))
+      .then(data => {
+        allQuestions = data.easy || []; // 1–100
+        showStartScreen();
+      })
+      .catch(err => {
+        questionPad.textContent = 'Error: ' + err;
+        console.error(err);
+      });
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function showStartScreen() {
+      isQuizActive = false; stopTimer(); timerDisplay.style.display = 'none';
+      startScreen.style.display = 'block'; resultDiv.style.display = 'none';
+      questionPad.textContent = 'Ready! 20 random questions will be selected.';
+    }
+
+    function startQuiz() {
+      if (allQuestions.length < 20) {
+        alert('Not enough questions! Need at least 20.');
+        return;
+      }
+      selectedQuestions = shuffle([...allQuestions]).slice(0, 20);
+      isQuizActive = true; curIdx = 0; correctCount = 0; startTime = Date.now();
+      startScreen.style.display = 'none'; timerDisplay.style.display = 'block';
+      resultDiv.style.display = 'none'; startTimer(); loadQuestion(0);
+    }
+
+    function startTimer() {
+      if (intervalId) clearInterval(intervalId);
+      questionStartTime = Date.now();
+      intervalId = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - questionStartTime) / 1000);
+        timerDisplay.textContent = `Time: ${elapsed}s`;
+      }, 1000);
+    }
+    function stopTimer() { if (intervalId) clearInterval(intervalId); }
+
+    function loadQuestion(idx) {
+      if (idx >= selectedQuestions.length || !isQuizActive) { endQuiz(); return; }
+      curQ = selectedQuestions[idx]; questionPad.textContent = curQ.question;
+      answerPad.innerHTML = ''; questionAnswers.innerHTML = ''; startTimer();
+
+      curQ.answers.forEach((txt, i) => {
+        const block = document.createElement('div');
+        block.className = 'answer-block'; block.textContent = txt; block.draggable = true;
+        block.dataset.idx = i; answerPad.appendChild(block);
+        block.addEventListener('dragstart', dragStart);
+        block.addEventListener('dragend', dragEnd);
+      });
+
+      for (let i = 0; i < curQ.answer_divs; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'slot'; slot.textContent = `Drop answer ${i + 1} here`;
+        slot.dataset.slot = i; slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('drop', drop); questionAnswers.appendChild(slot);
+      }
+
+      answerPad.addEventListener('dragover', e => e.preventDefault());
+      answerPad.addEventListener('drop', e => drop(e, true));
+    }
+
+    function dragStart(e) {
+      e.dataTransfer.setData('text/plain', e.target.dataset.idx);
+      e.target.classList.add('dragging'); e.target.style.opacity = '0.3';
+    }
+    function dragEnd(e) {
+      e.target.style.opacity = ''; e.target.classList.remove('dragging');
+      if (!e.target.closest('.slot') && !e.target.closest('#answer_pad')) answerPad.appendChild(e.target);
+    }
+    function drop(e, toAnswerPad = false) {
+      if (!isQuizActive) return;
+      e.preventDefault();
+      const idx = e.dataTransfer.getData('text/plain');
+      const block = document.querySelector(`.answer-block[data-idx="${idx}"]`);
+      if (!block) return;
+      block.style.opacity = ''; block.classList.remove('dragging');
+      if (toAnswerPad) { answerPad.appendChild(block); return; }
+      const slot = e.target.closest('.slot');
+      if (!slot || slot.children.length) return;
+      slot.textContent = ''; slot.appendChild(block);
+      if (questionAnswers.querySelectorAll('.slot .answer-block').length === questionAnswers.querySelectorAll('.slot').length) {
+        setTimeout(checkAnswerAndProceed, 300);
+      }
+    }
+
+    function checkAnswerAndProceed() {
+      const userOrder = Array.from(questionAnswers.querySelectorAll('.slot')).map(s => {
+        const b = s.querySelector('.answer-block');
+        return b ? +b.dataset.idx : -1;
+      });
+      const isCorrect = JSON.stringify(userOrder) === JSON.stringify(curQ.correct_order);
+      if (isCorrect) {
+        correctCount++; curIdx++;
+        setTimeout(() => loadQuestion(curIdx), 600);
+      } else {
+        questionAnswers.classList.add('shake');
+        setTimeout(() => {
+          questionAnswers.classList.remove('shake');
+          questionAnswers.querySelectorAll('.answer-block').forEach(b => answerPad.appendChild(b));
+          questionAnswers.querySelectorAll('.slot').forEach((s, i) => s.textContent = `Drop answer ${i + 1} here`);
+        }, 600);
+      }
+    }
+
+    function endQuiz() {
+      if (!isQuizActive) return;
+      isQuizActive = false; stopTimer();
+      const totalTime = Math.floor((Date.now() - startTime) / 1000);
+      const mins = Math.floor(totalTime / 60), secs = totalTime % 60;
+      scoreDisplay.textContent = `Score: ${correctCount} / 20`;
+      totalTimeDisplay.textContent = `Time: ${mins}m ${secs}s`;
+      resultDiv.style.display = 'block'; questionPad.textContent = 'Quiz Complete!';
+      answerPad.innerHTML = ''; questionAnswers.innerHTML = ''; timerDisplay.style.display = 'none';
+    }
+
+    // Events
+    startBtn.addEventListener('click', startQuiz);
+    retryBtn.addEventListener('click', startQuiz);
+    cancelBtn.addEventListener('click', () => confirm('Restart?') && showStartScreen());
+    quitBtn.addEventListener('click', () => confirm('Quit?') && window.close());
+
+    // Cursor
     document.addEventListener('mousemove', e => {
       const glow = document.querySelector('.cursor-glow');
-      glow.style.left = e.pageX + 'px';
-      glow.style.top = e.pageY + 'px';
+      glow.style.left = e.pageX + 'px'; glow.style.top = e.pageY + 'px';
     });
+
+    showStartScreen();
   </script>
 </body>
 </html>
