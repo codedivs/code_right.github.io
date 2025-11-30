@@ -13,9 +13,9 @@ const startBtn = document.getElementById('start_btn');
 const quitBtn = document.getElementById('quit_btn');
 
 let allQuestions = [], selectedQuestions = [], curIdx = 0, curQ = null;
-let correctCount = 0, startTime = 0, questionStartTime = 0, intervalId = null, isQuizActive = false;
+let correctCount = 0, startTime = 0, intervalId = null, isQuizActive = false;
 
-// Fetch + Select 20 Random Easy Questions
+// Fetch questions
 fetch('questions.json')
   .then(r => r.ok ? r.json() : Promise.reject('Failed to load questions'))
   .then(data => {
@@ -23,7 +23,7 @@ fetch('questions.json')
     showStartScreen();
   })
   .catch(err => {
-    questionPad.textContent = 'Error: ' + err;
+    questionPad.textContent = 'Error loading questions: ' + err;
     console.error(err);
   });
 
@@ -35,202 +35,229 @@ function shuffle(array) {
   return array;
 }
 
+// === Screens ===
 function showStartScreen() {
-  isQuizActive = false; stopTimer(); timerDisplay.style.display = 'none';
-  startScreen.style.display = 'block'; resultDiv.style.display = 'none';
+  isQuizActive = false;
+  stopTimer();
+  timerDisplay.style.display = 'none';
+  startScreen.style.display = 'block';
+  resultDiv.style.display = 'none';
   questionPad.textContent = 'You ready to code? Have fun.';
+  answerPad.innerHTML = '';
+  questionAnswers.innerHTML = '';
 }
 
 function startQuiz() {
   if (allQuestions.length < 20) {
-    alert('Not enough questions! Need at least 20.');
+    alert('Not enough questions loaded!');
     return;
   }
+
   selectedQuestions = shuffle([...allQuestions]).slice(0, 20);
-  isQuizActive = true; curIdx = 0; correctCount = 0; startTime = Date.now();
-  startScreen.style.display = 'none'; timerDisplay.style.display = 'block';
-  resultDiv.style.display = 'none'; startTimer(); loadQuestion(0);
+  curIdx = 0; correctCount = 0; startTime = Date.now();
+  isQuizActive = true;
+
+  // Full cleanup
+  answerPad.innerHTML = '';
+  questionAnswers.innerHTML = '';
+  resultDiv.style.display = 'none';
+  startScreen.style.display = 'none';
+  timerDisplay.style.display = 'block';
+
+  startTimer();
+  loadQuestion(0);
 }
 
+function endQuiz() {
+  if (!isQuizActive) return;
+  isQuizActive = false;
+  stopTimer();
+
+  const totalTime = Math.floor((Date.now() - startTime) / 1000);
+  const mins = Math.floor(totalTime / 60);
+  const secs = totalTime % 60;
+
+  scoreDisplay.textContent = `Score: ${correctCount} / 20`;
+  totalTimeDisplay.textContent = `Time: ${mins}m ${secs}s`;
+  resultDiv.style.display = 'block';
+  questionPad.textContent = 'Quiz Complete!';
+  timerDisplay.style.display = 'none';
+}
+
+// === Timer ===
 function startTimer() {
   if (intervalId) clearInterval(intervalId);
-  questionStartTime = Date.now();
+  const questionStartTime = Date.now();
   intervalId = setInterval(() => {
     const elapsed = Math.floor((Date.now() - questionStartTime) / 1000);
     timerDisplay.textContent = `Time: ${elapsed}s`;
   }, 1000);
 }
 
-function stopTimer() { if (intervalId) clearInterval(intervalId); }
+function stopTimer() {
+  if (intervalId) clearInterval(intervalId);
+}
 
+// === Load Question ===
 function loadQuestion(idx) {
-  if (idx >= selectedQuestions.length || !isQuizActive) { endQuiz(); return; }
-  curQ = selectedQuestions[idx]; questionPad.textContent = curQ.question;
-  answerPad.innerHTML = ''; questionAnswers.innerHTML = ''; startTimer();
+  if (idx >= selectedQuestions.length || !isQuizActive) {
+    endQuiz();
+    return;
+  }
 
+  curQ = selectedQuestions[idx];
+  questionPad.textContent = curQ.question;
+
+  answerPad.innerHTML = '';
+  questionAnswers.innerHTML = '';
+
+  // Answer blocks
   curQ.answers.forEach((txt, i) => {
     const block = document.createElement('div');
-    block.className = 'answer-block'; block.textContent = txt; block.draggable = true;
-    block.dataset.idx = i; answerPad.appendChild(block);
+    block.className = 'answer-block';
+    block.textContent = txt;
+    block.draggable = true;
+    block.dataset.idx = i;
+    answerPad.appendChild(block);
+
     block.addEventListener('dragstart', dragStart);
     block.addEventListener('dragend', dragEnd);
   });
 
+  // Slots with placeholder via data attribute
   for (let i = 0; i < curQ.answer_divs; i++) {
     const slot = document.createElement('div');
-    slot.className = 'slot'; slot.textContent = `Drop answer ${i + 1} here`;
-    slot.dataset.slot = i; slot.addEventListener('dragover', e => e.preventDefault());
-    slot.addEventListener('drop', drop); questionAnswers.appendChild(slot);
+    slot.className = 'slot';
+    slot.dataset.placeholder = `Drop answer ${i + 1} here`;
+    slot.dataset.slot = i;
+    slot.addEventListener('dragover', e => e.preventDefault());
+    slot.addEventListener('drop', drop);
+    questionAnswers.appendChild(slot);
   }
 
+  // Allow dropping back into answer pad
   answerPad.addEventListener('dragover', e => e.preventDefault());
   answerPad.addEventListener('drop', e => drop(e, true));
 }
 
+// === Drag & Drop ===
 function dragStart(e) {
   e.dataTransfer.setData('text/plain', e.target.dataset.idx);
-  e.target.classList.add('dragging'); e.target.style.opacity = '0.3';
+  e.target.classList.add('dragging');
 }
 
 function dragEnd(e) {
-  e.target.style.opacity = ''; e.target.classList.remove('dragging');
-  if (!e.target.closest('.slot') && !e.target.closest('#answer_pad')) answerPad.appendChild(e.target);
+  e.target.classList.remove('dragging');
 }
 
 function drop(e, toAnswerPad = false) {
   if (!isQuizActive) return;
   e.preventDefault();
+
   const idx = e.dataTransfer.getData('text/plain');
   const block = document.querySelector(`.answer-block[data-idx="${idx}"]`);
   if (!block) return;
-  block.style.opacity = ''; block.classList.remove('dragging');
-  if (toAnswerPad) { answerPad.appendChild(block); return; }
+
+  block.classList.remove('dragging');
+
+  if (toAnswerPad || !e.target.closest('.slot')) {
+    answerPad.appendChild(block);
+    // Restore placeholders on any empty slots
+    document.querySelectorAll('.slot').forEach(slot => {
+      if (!slot.hasChildNodes()) slot.innerHTML = '';
+    });
+    return;
+  }
+
   const slot = e.target.closest('.slot');
-  if (!slot || slot.children.length) return;
-  slot.textContent = ''; slot.appendChild(block);
-  if (questionAnswers.querySelectorAll('.slot .answer-block').length === questionAnswers.querySelectorAll('.slot').length) {
-    setTimeout(checkAnswerAndProceed, 300);
+  if (!slot || slot.children.length > 0) return;
+
+  slot.innerHTML = '';
+  slot.appendChild(block);
+
+  // Check if all slots filled
+  if (questionAnswers.querySelectorAll('.slot .answer-block').length === curQ.answer_divs) {
+    setTimeout(checkAnswerAndProceed, 400);
   }
 }
 
 function checkAnswerAndProceed() {
-  const userOrder = Array.from(questionAnswers.querySelectorAll('.slot')).map(s => {
-    const b = s.querySelector('.answer-block');
-    return b ? +b.dataset.idx : -1;
+  const userOrder = Array.from(questionAnswers.querySelectorAll('.slot')).map(slot => {
+    const block = slot.querySelector('.answer-block');
+    return block ? +block.dataset.idx : -1;
   });
+
   const isCorrect = JSON.stringify(userOrder) === JSON.stringify(curQ.correct_order);
+
   if (isCorrect) {
-    correctCount++; curIdx++;
+    correctCount++;
+    curIdx++;
     setTimeout(() => loadQuestion(curIdx), 600);
   } else {
     questionAnswers.classList.add('shake');
     setTimeout(() => {
       questionAnswers.classList.remove('shake');
+      // Move all blocks back
       questionAnswers.querySelectorAll('.answer-block').forEach(b => answerPad.appendChild(b));
-      questionAnswers.querySelectorAll('.slot').forEach((s, i) => s.textContent = `Drop answer ${i + 1} here`);
+      questionAnswers.querySelectorAll('.slot').forEach(slot => slot.innerHTML = '');
     }, 600);
   }
 }
 
-///////////////////////////////////////
-function customConfirm(message) {
-  return new Promise((resolve) => {
-    // Create modal elements
+// === Custom Confirm Modal ===
+async function customConfirm(message) {
+  return new Promise(resolve => {
     const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.65);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 9999;
+    overlay.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:9999;`;
+    overlay.innerHTML = `
+      <div style="background:#0c121c;padding:24px 32px;border-radius:12px;text-align:center;box-shadow:0 0 20px rgba(20,255,236,0.3);">
+        <p style="color:#14ffec;margin-bottom:16px;font-size:1.1rem;">${message}</p>
+        <button id="yesBtn" style="background:#14ffec;color:#0b0f19;padding:10px 20px;border:none;border-radius:8px;margin:0 8px;cursor:pointer;">Yes</button>
+        <button id="noBtn" style="background:#ff416c;color:white;padding:10px 20px;border:none;border-radius:8px;margin:0 8px;cursor:pointer;">No</button>
+      </div>
     `;
-
-    const box = document.createElement('div');
-    box.style.cssText = `
-      background: rgba(12,18,28,0.95);
-      padding: 20px 30px;
-      border-radius: 10px;
-      color: #14ffec;
-      text-align: center;
-      font-family: 'Fira Code', monospace;
-      box-shadow: 0 0 18px rgba(20,255,236,0.3);
-      animation: fadeIn .3s ease;
-    `;
-    box.innerHTML = `
-      <p style="margin-bottom: 14px;">${message}</p>
-      <button id="confirmYes" style="margin-right:10px; background:#14ffec; color:#0b0f19; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Yes</button>
-      <button id="confirmNo" style="background:#ff416c; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">No</button>
-    `;
-
-    overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    // Handle button clicks
-    box.querySelector('#confirmYes').onclick = () => {
-      document.body.removeChild(overlay);
-      resolve(true);
-    };
-    box.querySelector('#confirmNo').onclick = () => {
-      document.body.removeChild(overlay);
-      resolve(false);
-    };
+    overlay.querySelector('#yesBtn').onclick = () => { overlay.remove(); resolve(true); };
+    overlay.querySelector('#noBtn').onclick = () => { overlay.remove(); resolve(false); };
   });
 }
 
-//////////////////////////////////////
-
-////////////////////////////////////////
-
 function showGoodbyeScreen() {
   document.body.innerHTML = `
-    <div style="
-      display:flex; flex-direction:column; justify-content:center; align-items:center;
-      height:100vh; color:#14ffec; font-family:'Fira Code', monospace;
-      background: radial-gradient(circle at 20% 20%, #0b0f19 0%, #02060f 100%);
-      text-align:center;
-    ">
-      <h2>👋 Thanks for playing!</h2>
-      <p>Come back soon!</p>
-      <button id="restartBtn" style="margin-top:16px; padding:12px 20px;
-        background:linear-gradient(90deg, #14ffec, #0d7377);
-        color:#0b0f19; border:none; border-radius:8px; cursor:pointer;">
-        Restart
+    <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;color:#14ffec;font-family:'Fira Code',monospace;background:radial-gradient(circle at 20% 20%, #0b0f19 0%, #02060f 100%);text-align:center;">
+      <h2 style="font-size:2.5rem;margin-bottom:16px;">Thanks for playing!</h2>
+      <p style="font-size:1.2rem;margin-bottom:24px;">Come back soon!</p>
+      <button id="restartBtn" style="padding:14px 28px;background:linear-gradient(90deg,#14ffec,#0d7377);color:#0b0f19;border:none;border-radius:10px;font-size:1.1rem;cursor:pointer;box-shadow:0 0 20px rgba(20,255,236,0.4);">
+        Restart Quiz
       </button>
     </div>
   `;
-
-  document.getElementById('restartBtn').onclick = showStartScreen;
+  document.getElementById('restartBtn').onclick = () => location.reload();
 }
 
-///////////////////////////////////////
-function endQuiz() {
-  if (!isQuizActive) return;
-  isQuizActive = false; stopTimer();
-  const totalTime = Math.floor((Date.now() - startTime) / 1000);
-  const mins = Math.floor(totalTime / 60), secs = totalTime % 60;
-  scoreDisplay.textContent = `Score: ${correctCount} / 20`;
-  totalTimeDisplay.textContent = `Time: ${mins}m ${secs}s`;
-  resultDiv.style.display = 'block'; questionPad.textContent = 'Quiz Complete!';
-  answerPad.innerHTML = ''; questionAnswers.innerHTML = ''; timerDisplay.style.display = 'none';
-}
-
-// Events
+// === Event Listeners ===
 startBtn.addEventListener('click', startQuiz);
 retryBtn.addEventListener('click', startQuiz);
+
 cancelBtn.addEventListener('click', async () => {
-  const confirmed = await customConfirm('Restart?');
-  if (confirmed) showStartScreen();
+  if (await customConfirm('Restart the quiz?')) {
+    showStartScreen();
+  }
 });
+
 quitBtn.addEventListener('click', async () => {
-  const confirmed = await customConfirm('Quit the game?');
-  if (confirmed) {
+  if (await customConfirm('Quit the game?')) {
     showGoodbyeScreen();
   }
 });
-// Cursor Glow
+
+// Cursor glow effect
 document.addEventListener('mousemove', e => {
   const glow = document.querySelector('.cursor-glow');
-  glow.style.left = e.pageX + 'px'; glow.style.top = e.pageY + 'px';
+  glow.style.left = e.pageX + 'px';
+  glow.style.top = e.pageY + 'px';
 });
 
+// Init
 showStartScreen();
