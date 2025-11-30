@@ -208,3 +208,58 @@ button:hover { transform: translateY(-2px); }
   .answer-block { padding: 12px 14px; font-size: 0.9rem; }
   .slot { min-height: 56px; }
 }
+/* Help Button */
+#help_btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background: rgba(20,255,236,0.15);
+  border: 2px solid #14ffec;
+  border-radius: 50%;
+  color: #14ffec;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(20,255,236,0.3);
+  transition: all .3s;
+  z-index: 100;
+}
+
+#help_btn:hover {
+  background: #14ffec;
+  color: #0b0f19;
+  transform: scale(1.1);
+}
+
+#help_btn svg {
+  width: 28px;
+  height: 28px;
+}
+
+/* Mobile: larger tap targets */
+.mobile .answer-block {
+  min-height: 58px;
+  padding: 18px 20px !important;
+  font-size: 1rem !important;
+  touch-action: manipulation;
+  border-radius: 12px;
+  margin: 6px 0;
+}
+
+.mobile .slot {
+  min-height: 68px;
+  border-radius: 12px;
+  margin: 8px 0;
+}
+
+/* Optional: highlight active block on tap */
+.answer-block:active {
+  transform: scale(0.96) !important;
+  background-color: #1ed760 !important;
+  color: black !important;
+}
